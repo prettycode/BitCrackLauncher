@@ -9,13 +9,13 @@ using System.Threading.Tasks;
 using Humanizer;
 using NBitcoin;
 
-namespace BitCrakcLauncher
+namespace BitCrackLauncher
 {
     internal class ProgramConfig
     {
         public BitcoinPuzzle Puzzle { get; set; } = new("13zb1hQbWVsc2S7ZTZnP2G4undNNpdh5so", "20000000000000000", "3ffffffffffffffff");
 
-        public TimeSpan TimeBeforeRestart { get; set; } = TimeSpan.Parse("06:00:00");
+        public TimeSpan TimeBeforeRestart { get; set; } = TimeSpan.Parse("08:00:00");
 
         public int ConcurrentCrackerInstancesCount { get; set; } = 5;
 
