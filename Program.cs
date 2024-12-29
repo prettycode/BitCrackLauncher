@@ -52,6 +52,9 @@ namespace BitCrackLauncher
 
             if (!config.IsDebug && IsProgramAlreadyRunning())
             {
+                Console.Beep();
+                Console.Beep();
+                Console.Beep();
                 return;
             }
 
@@ -81,6 +84,8 @@ namespace BitCrackLauncher
 
                 KillCrackerInstances(config.CrackerPath);
 
+                var startTime = DateTime.UtcNow;
+
                 for (int i = 0; i < config.ConcurrentCrackerInstancesCount; i++)
                 {
                     ProcessStartInfo crackerProcessInfo = CreateCrackerProcessStartInfo(
@@ -95,9 +100,21 @@ namespace BitCrackLauncher
                     Process.Start(crackerProcessInfo);
                 }
 
-                Console.WriteLine($"Waiting {config.TimeBeforeRestart.Humanize()} before restarting in new keyspaces...\n");
+                Console.Write($"Waiting {config.TimeBeforeRestart.Humanize()} before restarting in new keyspaces. Restarting in: ");
 
-                await Task.Delay(config.TimeBeforeRestart);
+                var endTime = startTime.Add(config.TimeBeforeRestart);
+                var timePosition = Console.CursorLeft;
+                var timeTop = Console.CursorTop;
+
+                for (TimeSpan remainingTime; (remainingTime = endTime - DateTime.UtcNow) > TimeSpan.Zero;)
+                {
+                    Console.SetCursorPosition(timePosition, timeTop);
+                    Console.Write($"{remainingTime.Hours:D2}:{remainingTime.Minutes:D2}:{remainingTime.Seconds:D2}...");
+
+                    await Task.Delay(1000);
+                }
+
+                Console.WriteLine("\n\nRestarting in new keyspaces...\n");
             }
         }
 
