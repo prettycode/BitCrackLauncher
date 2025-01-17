@@ -11,8 +11,11 @@ namespace BitCrackLauncher
     {
         private static async Task Main(string[] args)
         {
-            ProgramConfig config = new(args);
+            await Start(new(args));
+        }
 
+        private static async Task Start(ProgramConfig config)
+        {
             if (!config.IsDebug && IsProgramAlreadyRunning())
             {
                 return;
