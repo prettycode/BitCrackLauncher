@@ -1,49 +1,12 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
-using System.Numerics;
-using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using Humanizer;
-using NBitcoin;
 
 namespace BitCrackLauncher
 {
-    internal class ProgramConfig
-    {
-        public BitcoinPuzzle Puzzle { get; set; } = new("1BY8GQbnueYofwSuFAT3USAhGjPrkxDdW9", "40000000000000000", "7ffffffffffffffff");
-
-        public TimeSpan TimeBeforeRestart { get; set; } = TimeSpan.Parse("08:00:00");
-
-        public int ConcurrentCrackerInstancesCount { get; set; } = 5;
-
-        public string CrackerPath { get; set; } = @"C:\GitHub\BitCrackLauncher\clBitCrack.exe";
-
-        public string SolutionOutputFilePattern { get { return Path.Combine(Path.GetDirectoryName(this.CrackerPath), "solution.*.txt"); } }
-
-        public readonly bool IsDebug;
-
-        public ProgramConfig(string[] args)
-        {
-            if (args == null || args.Length == 0)
-            {
-                return;
-            }
-
-            if (args.Length > 1 || !(String.Equals(args[0], "debug", StringComparison.OrdinalIgnoreCase)))
-            {
-                throw new ArgumentException("Only one command-line argument, 'debug', is supported.");
-            }
-
-            this.Puzzle = new("1E6NuFjCi27W5zoXg8TRdcSRq84zJeBW3k", "10", "1f");
-            this.TimeBeforeRestart = TimeSpan.Parse("00:00:30");
-            this.ConcurrentCrackerInstancesCount = 10;
-            this.IsDebug = true;
-        }
-    }
-
     internal class Program
     {
         private static async Task Main(string[] args)
@@ -52,9 +15,6 @@ namespace BitCrackLauncher
 
             if (!config.IsDebug && IsProgramAlreadyRunning())
             {
-                Console.Beep();
-                Console.Beep();
-                Console.Beep();
                 return;
             }
 
@@ -214,78 +174,6 @@ namespace BitCrackLauncher
                     process.Dispose();
                 }
             }
-        }
-    }
-
-    internal class BitcoinPuzzle
-    {
-        public readonly string AddressToCrack;
-        public readonly BigInteger KeyspaceStartInclusive;
-        public readonly BigInteger KeyspaceEndInclusive;
-
-        public BitcoinPuzzle(string addressToCrack, string hexRangeLowInclusive, string hexRangeHighInclusive)
-        {
-            if (!IsValidAddress(addressToCrack))
-            {
-                throw new ArgumentException("Invalid public key.", nameof(addressToCrack));
-            }
-
-            this.AddressToCrack = addressToCrack;
-
-            if (!BigInteger.TryParse(hexRangeLowInclusive, NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out this.KeyspaceStartInclusive))
-            {
-                throw new ArgumentException("Invalid hexadecimal number.", nameof(hexRangeLowInclusive));
-            }
-
-            if (!BigInteger.TryParse(hexRangeHighInclusive, NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out this.KeyspaceEndInclusive))
-            {
-                throw new ArgumentException("Invalid hexadecimal number.", nameof(hexRangeHighInclusive));
-            }
-        }
-
-        public string GetRandomKeyspace()
-        {
-            return GetRandomBigInteger(this.KeyspaceStartInclusive, this.KeyspaceEndInclusive).ToString("X");
-        }
-
-        private static bool IsValidAddress(string address)
-        {
-            try
-            {
-                BitcoinAddress.Create(address, Network.Main);
-            }
-            catch
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        private static BigInteger GetRandomBigInteger(BigInteger minValueInclusive, BigInteger maxValueInclusive)
-        {
-            if (minValueInclusive >= maxValueInclusive)
-            {
-                throw new ArgumentOutOfRangeException(nameof(minValueInclusive), $"Cannot be greater than or equal to {maxValueInclusive}");
-            }
-
-            BigInteger range = maxValueInclusive - minValueInclusive + 1;
-            int bytesNeeded = range.GetByteCount();
-            byte[] bytes = new byte[bytesNeeded];
-            BigInteger result;
-
-            do
-            {
-                RandomNumberGenerator.Fill(bytes);
-
-                // Ensure a positive value
-                bytes[bytesNeeded - 1] &= 0x7F;
-
-                result = new BigInteger(bytes);
-            }
-            while (result < 0 || result >= range);
-
-            return result + minValueInclusive;
         }
     }
 }
